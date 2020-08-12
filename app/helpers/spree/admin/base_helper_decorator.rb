@@ -1,4 +1,4 @@
-Spree::BaseHelper.class_eval do
+::Spree::BaseHelper.module_eval do
   def selected?(current_insight, insight)
     current_insight.eql?(insight)
   end
@@ -15,3 +15,4 @@ Spree::BaseHelper.class_eval do
     wicked_pdf_image_tag image_path, class: 'logo'
   end
 end
+
