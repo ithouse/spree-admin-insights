@@ -30,7 +30,7 @@ module Spree
     end
 
     private def query_with_inventory_unit_quantities
-      Spree::LineItem
+      resource_scope
         .joins(:order)
         .joins(:variant)
         .joins(:product)
@@ -49,7 +49,7 @@ module Spree
     end
 
     private def query_without_inventory_unit_quantities
-      Spree::LineItem
+      resource_scope
         .joins(:order)
         .joins(:variant)
         .joins(:product)
@@ -65,6 +65,10 @@ module Spree
           'spree_variants.sku         as sku',
           'count(spree_line_items.id) as sold_count'
         )
+    end
+
+    private def resource_scope
+      resource_scope_by_class(Spree::LineItem)
     end
   end
 end
