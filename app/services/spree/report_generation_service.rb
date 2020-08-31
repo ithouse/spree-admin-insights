@@ -6,10 +6,12 @@ module Spree
       delegate :configuration, to: SpreeAdminInsights::Config
     end
 
-    def self.generate_report(report_name, options)
+    def self.generate_report(report_name:, options:, current_user:, current_ability:, action:)
       klass = Spree.const_get((report_name.to_s + '_report').classify)
-      resource = klass.new(options)
-      dataset = resource.generate
+      resource = klass.new(
+        options: options, current_user: current_user,
+        current_ability: current_ability, action: action)
+      resource.generate
     end
 
     def self.download(report, options = {})

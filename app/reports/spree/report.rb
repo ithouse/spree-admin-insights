@@ -5,6 +5,7 @@ module Spree
                   :records_per_page, :current_page, :paginate, :search, :reporting_period
     alias_method  :sort_direction, :sortable_type
     alias_method  :paginate?, :paginate
+    attr_reader :current_user, :current_ability, :action
 
 
     TIME_SCALES = [:hourly, :daily, :monthly, :yearly]
@@ -39,7 +40,7 @@ module Spree
     end
 
 
-    def initialize(options)
+    def initialize(options:, current_user:, current_ability:, action:)
       self.search = options.fetch(:search, {})
       self.records_per_page = options[:records_per_page]
       self.current_page = options[:offset]
@@ -49,6 +50,9 @@ module Spree
       if self.class::SORTABLE_ATTRIBUTES.present?
         set_sortable_attributes(options, self.class::DEFAULT_SORTABLE_ATTRIBUTE)
       end
+      @current_user = current_user
+      @current_ability = current_ability
+      @action = action
     end
 
     def header_sorted?(header)

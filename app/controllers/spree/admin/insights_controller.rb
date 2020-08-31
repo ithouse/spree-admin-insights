@@ -13,7 +13,12 @@ module Spree
       end
 
       def show
-        report = ReportGenerationService.generate_report(@report_name, params.merge(@pagination_hash))
+        report = ReportGenerationService.generate_report(
+          report_name: @report_name,
+          options: params.merge(@pagination_hash),
+          current_user: spree_current_user,
+          current_ability: current_ability,
+          action: action)
 
         @report_data = shared_data.merge(report.to_h)
         respond_to do |format|
@@ -23,7 +28,12 @@ module Spree
       end
 
       def download
-        @report = ReportGenerationService.generate_report(@report_name, params.merge(@pagination_hash))
+        @report = ReportGenerationService.generate_report(
+          report_name: @report_name,
+          options: params.merge(@pagination_hash),
+          current_user: spree_current_user,
+          current_ability: current_ability,
+          action: action)
 
         respond_to do |format|
           format.csv do
