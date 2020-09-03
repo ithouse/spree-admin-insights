@@ -1,6 +1,7 @@
 module Spree
   class BestSellingProductsReport < Spree::Report
     DEFAULT_SORTABLE_ATTRIBUTE = :sold_count
+    DEFAULT_SORT_DIRECTION     = :desc
     HEADERS                    = { sku: :string, product_name: :string, sold_count: :integer }
     SEARCH_ATTRIBUTES          = { start_date: :orders_completed_from, end_date: :orders_completed_to }
     SORTABLE_ATTRIBUTES        = [:product_name, :sku, :sold_count]
@@ -46,6 +47,7 @@ module Spree
           'spree_variants.sku         as sku',
           'sum(spree_inventory_units.quantity) as sold_count'
         )
+        .order('sold_count DESC')
     end
 
     private def query_without_inventory_unit_quantities

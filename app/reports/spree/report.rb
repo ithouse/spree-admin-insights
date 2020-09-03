@@ -48,7 +48,7 @@ module Spree
       extract_reporting_period
       determine_report_time_scale
       if self.class::SORTABLE_ATTRIBUTES.present?
-        set_sortable_attributes(options, self.class::DEFAULT_SORTABLE_ATTRIBUTE)
+        set_sortable_attributes(options)
       end
       @current_user = current_user
       @current_ability = current_ability
@@ -72,9 +72,15 @@ module Spree
       ActiveRecord::Base.connection.exec_query(query_sql)
     end
 
-    def set_sortable_attributes(options, default_sortable_attribute)
-      self.sortable_type ||= (options[:sort] && options[:sort][:type].eql?('desc')) ? :desc : :asc
-      self.sortable_attribute = options[:sort] ? options[:sort][:attribute].to_sym : default_sortable_attribute
+    def set_sortable_attributes(options)
+      self.sortable_type ||= if options[:sort].present?
+                               options[:sort][:type].eql?('desc') ? :desc : :asc
+                             elsif defined?(self.class::DEFAULT_SORT_DIRECTION)
+                               self.class::DEFAULT_SORT_DIRECTION
+                             else
+                               :asc
+                             end
+      self.sortable_attribute = options[:sort] ? options[:sort][:attribute].to_sym : self.class::DEFAULT_SORTABLE_ATTRIBUTE
     end
 
     def active_record_sort
