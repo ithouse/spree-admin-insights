@@ -1,14 +1,15 @@
 module Spree
   class SalesPerformanceReport < Spree::Report
-    HEADERS             = { sale_price: :integer, cost_price: :integer, promotion_discount: :integer, profit_loss: :integer, profit_loss_percent: :integer }
+    # HEADERS             = { sale_price: :integer, cost_price: :integer, promotion_discount: :integer, profit_loss: :integer, profit_loss_percent: :integer }
+    HEADERS             = { sale_price: :integer, sale_price_avg: :integer}
     SEARCH_ATTRIBUTES   = { start_date: :orders_created_from, end_date: :orders_created_till }
     SORTABLE_ATTRIBUTES = []
 
     class Result < Spree::Report::TimedResult
-      charts ProfitLossChart, ProfitLossPercentChart, SaleCostPriceChart
+      charts ProfitLossChart #, ProfitLossPercentChart, SaleCostPriceChart
 
       class Observation < Spree::Report::TimedObservation
-        observation_fields cost_price: 0, sale_price: 0, profit_loss: 0, profit_loss_percent: 0, promotion_discount: 0
+        observation_fields cost_price: 0, sale_price: 0, profit_loss: 0, profit_loss_percent: 0, promotion_discount: 0, sale_price_avg: 0
 
         def cost_price
           @cost_price.to_f
@@ -30,8 +31,28 @@ module Spree
         def promotion_discount
           @promotion_discount.to_f
         end
+
+        def sale_price_avg
+          @sale_price_avg.to_f
+        end
       end
 
+      def to_h
+        result = super
+        result[:totals] = {
+          sum: report.total_sum,
+          avg: report.total_avg
+        }
+        result
+      end
+    end
+
+    def total_sum
+      resource_scope.sum(:total).to_f.round(2)
+    end
+
+    def total_avg
+      resource_scope.average(:total).to_f.round(2)
     end
 
     private def report_query
@@ -44,7 +65,8 @@ module Spree
           'SUM(sale_price) as sale_price',
           'SUM(cost_price) as cost_price',
           'SUM(profit_loss) as profit_loss',
-          'SUM(promotion_discount) as promotion_discount'
+          'SUM(promotion_discount) as promotion_discount',
+          'ROUND(AVG(sale_price_avg), 2) as sale_price_avg'
         )
     end
 
@@ -58,7 +80,8 @@ module Spree
           '0 as sale_price',
           '0 as cost_price',
           'SUM(promotion_discount) * -1 as profit_loss',
-          'SUM(promotion_discount) as promotion_discount'
+          'SUM(promotion_discount) as promotion_discount',
+          '0 as sale_price_avg'
         )
     end
 
@@ -84,24 +107,28 @@ module Spree
           Spree::Report::QueryFragments.if_null(Spree::Report::QueryFragments.sum(order_with_line_items_ar[:sale_price]), zero).as('sale_price'),
           Spree::Report::QueryFragments.if_null(Spree::Report::QueryFragments.sum(order_with_line_items_ar[:cost_price]), zero).as('cost_price'),
           Spree::Report::QueryFragments.if_null(Spree::Report::QueryFragments.sum(order_with_line_items_ar[:profit_loss]), zero).as('profit_loss'),
-          '0 as promotion_discount'
+          '0 as promotion_discount',
+          Spree::Report::QueryFragments.if_null(Spree::Report::QueryFragments.avg(order_with_line_items_ar[:sale_price]), zero).as('sale_price_avg')
         )
     end
 
     private def order_with_line_items
       line_item_ar = Spree::LineItem.arel_table
-      Spree::Order
-        .where.not(completed_at: nil)
-        .where(created_at: reporting_period)
+      resource_scope
         .joins(:line_items)
         .group('spree_orders.id', *time_scale_columns_to_s)
         .select(
           *time_scale_selects('spree_orders'),
-          "spree_orders.item_total as sale_price",
+          "spree_orders.total as sale_price",
           "SUM(#{ Spree::Report::QueryFragments.if_null(line_item_ar[:cost_price], line_item_ar[:price]).to_sql } * spree_line_items.quantity) as cost_price",
           "(spree_orders.item_total - SUM(#{ Spree::Report::QueryFragments.if_null(line_item_ar[:cost_price], line_item_ar[:price]).to_sql } * spree_line_items.quantity)) as profit_loss"
         )
     end
 
+    private def resource_scope
+      resource_scope_by_class(Spree::Order)
+        .where.not(completed_at: nil)
+        .where(created_at: reporting_period)
+    end
   end
 end

@@ -58,4 +58,8 @@ module Spree::Report::QueryFragments
   def self.sum(node)
     Arel::Nodes::NamedFunction.new('SUM', [node])
   end
+
+  def self.avg(node)
+    Arel::Nodes::NamedFunction.new('AVG', [node])
+  end
 end

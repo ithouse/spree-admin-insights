@@ -182,6 +182,10 @@ ReportLoader.prototype.populateInsightsData = function(data) {
   } else {
     this.isStatePushable = true;
   }
+  if(data.totals) {
+    $('#total-sum').html(data.totals.sum);
+    $('#total-average').html(data.totals.avg);
+  }
 };
 
 ReportLoader.prototype.setDownloadLinksPath = function($selectedOption) {

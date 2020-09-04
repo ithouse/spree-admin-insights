@@ -36,6 +36,27 @@
     <div class="table-active-filters js-filters"></div>
   </div>
 
+  <% if @report_data[:totals].present? %>
+    <div class="row">
+      <div class="col-sm-6">
+        <strong>
+          <%= "#{Spree.t('insight.sales_performance.total_sum')}:" %>
+        </strong>
+        <span id="total-sum">
+          <%= @report_data[:totals][:sum] %>
+        </span>
+      </div>
+      <div class="col-sm-6">
+        <strong>
+          <%= "#{Spree.t('insight.sales_performance.average')}:" %>
+        </strong>
+        <span id="total-average">
+          <%= @report_data[:totals][:avg] %>
+        </span>
+      </div>
+    </div>
+  <% end %>
+
   <%= render 'chart' %>
 
   <div id="table-helpers" class="row float-right hide">

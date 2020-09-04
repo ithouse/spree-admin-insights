@@ -125,6 +125,9 @@ en:
         shipping_charges: Shipping Charges
         tax: Tax
         promotion_discount: Promotional Discounts
+        total_sum: Total sum
+        average: Average
+        sale_price_avg: Average
       unique_purchases:
         title: Unique Purchases
         description: Will project the data about how many unique users have purchased a particular product.
