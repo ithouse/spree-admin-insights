@@ -143,8 +143,8 @@ module Spree
 
     private def resource_scope_by_class(model_class)
       if model_class.respond_to?(:accessible_by) &&
-          !current_ability.has_block?(action, model_class)
-        model_class.accessible_by(current_ability, action)
+          !current_ability.has_block?(:index, model_class)
+        model_class.accessible_by(current_ability, :index)
       else
         model_class.where(nil)
       end

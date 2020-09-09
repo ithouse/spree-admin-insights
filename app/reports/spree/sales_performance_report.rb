@@ -2,7 +2,7 @@ module Spree
   class SalesPerformanceReport < Spree::Report
     # HEADERS             = { sale_price: :integer, cost_price: :integer, promotion_discount: :integer, profit_loss: :integer, profit_loss_percent: :integer }
     HEADERS             = { sale_price: :integer, sale_price_avg: :integer}
-    SEARCH_ATTRIBUTES   = { start_date: :orders_created_from, end_date: :orders_created_till }
+    SEARCH_ATTRIBUTES   = { start_date: :orders_created_from, end_date: :orders_created_till, user_manage_contry_ids: :country }
     SORTABLE_ATTRIBUTES = []
 
     class Result < Spree::Report::TimedResult
@@ -43,7 +43,19 @@ module Spree
           sum: report.total_sum,
           avg: report.total_avg
         }
+        result[:user] = {
+          manage_contries: user_manage_contries
+        }
         result
+      end
+
+      private def user_manage_contries
+        countries = if report.current_user.has_spree_role?('admin')
+          Spree::Country.europe
+        else
+          report.current_user.manage_countries
+        end
+        countries.map{|x| {id: x.id, name: x.name} }
       end
     end
 
@@ -126,9 +138,13 @@ module Spree
     end
 
     private def resource_scope
-      resource_scope_by_class(Spree::Order)
+      scope = resource_scope_by_class(Spree::Order)
         .where.not(completed_at: nil)
         .where(created_at: reporting_period)
+      if (search[:user_manage_contry_ids])
+        scope = scope.joins(:user).where(spree_users: {country_id: search[:user_manage_contry_ids]})
+      end
+      scope
     end
   end
 end

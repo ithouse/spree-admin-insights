@@ -37,6 +37,19 @@
         </div>
       {% } %}
 
+      {% if(o['search_attributes']['user_manage_contry_ids']) { %}
+        <div class="row">
+          <div class="col col-md-6">
+            {% for (var i=0; i<o.user.manage_contries.length; i++) { %}
+            <div data-hook="admin_property_index_search" class="form-group">
+              <input type="checkbox" name="search[user_manage_contry_ids][]" id="search_user_manage_contry_ids{%= i %}" class="" value="{%= o.user.manage_contries[i].id %}">
+              <label for="search_user_manage_contry_ids{%= i %}">{%= o.user.manage_contries[i].name %}</label>
+           </div>
+            {% } %}
+          </div>
+        </div>
+      {% } %}
+
       <div class="row">
         <div class="date-range-filter col-md-8">
           <div class="form-group">
