@@ -141,6 +141,7 @@ en:
         product_name: Product
         sku: Variant
         sold_count: Sold Quantity
+        sold_sum: Sold Sum
       product_views_to_purchases:
         title: Product 'Views' To 'Purchases'
         description: Ratio of number of views (on product show page) to number of times product has been purchased after view.

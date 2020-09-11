@@ -9,7 +9,7 @@ function Paginator(inputs, reportLoader) {
 
 Paginator.prototype.bindEvents = function () {
   var _this = this;
-  this.paginatorDiv.on('click', '.pagination-link', function (event) {
+  this.paginatorDiv.on('click', '.page-link', function (event) {
     event.preventDefault();
     _this.loadPaginationData(event);
   });

@@ -1,8 +1,9 @@
 module Spree
   class UsersWhoRecentlyPurchasedReport < Spree::Report
-    DEFAULT_SORTABLE_ATTRIBUTE = :user_email
+    DEFAULT_SORTABLE_ATTRIBUTE = :purchase_count
+    DEFAULT_SORT_DIRECTION     = :desc
     HEADERS                    = { user_email: :string, purchase_count: :integer, last_purchase_date: :date, last_purchased_order_number: :string }
-    SEARCH_ATTRIBUTES          = { start_date: :start_date, end_date: :end_date, email_cont: :email }
+    SEARCH_ATTRIBUTES          = { start_date: :start_date, end_date: :end_date, email_cont: :email, user_manage_contry_ids: :country }
     SORTABLE_ATTRIBUTES        = [:user_email, :purchase_count, :last_purchase_date]
 
     def paginated?
@@ -16,6 +17,23 @@ module Spree
         def last_purchase_date
           @last_purchase_date.to_date.strftime("%B %d, %Y")
         end
+      end
+
+      def to_h
+        result = super
+        result[:user] = {
+          manage_contries: user_manage_contries
+        }
+        result
+      end
+
+      private def user_manage_contries
+        countries = if report.current_user.has_spree_role?('admin')
+          Spree::Country.europe
+        else
+          report.current_user.manage_countries
+        end
+        countries.map{|x| {id: x.id, name: x.name} }
       end
     end
 
@@ -50,11 +68,10 @@ module Spree
     end
 
     private def all_orders_with_users
-      Spree::Order
-        .where(Spree::Order.arel_table[:email].matches(email_search))
+      resource_scope
         .where(spree_orders: { completed_at: reporting_period })
         .select(
-          "spree_orders.email             as user_email",
+          "spree_users.email             as user_email",
           "max(spree_orders.completed_at) as last_purchase_date",
           "count(spree_orders.email)      as purchased_count"
         )
@@ -63,8 +80,16 @@ module Spree
         )
     end
 
-    private def email_search
-      search[:email_cont].present? ? "%#{ search[:email_cont] }%" : '%'
+    private def resource_scope
+      scope = resource_scope_by_class(Spree::Order).joins(:user)
+      if (search[:user_manage_contry_ids])
+        scope = scope.where(spree_users: {country_id: search[:user_manage_contry_ids]})
+      end
+      if search[:email_cont].present?
+        scope = scope
+          .where(Spree::User.arel_table[:email].matches("%#{ search[:email_cont] }%"))
+      end
+      scope
     end
   end
 end
