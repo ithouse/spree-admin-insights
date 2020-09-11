@@ -2,7 +2,7 @@ module Spree
   class SalesPerformanceReport < Spree::Report
     # HEADERS             = { sale_price: :integer, cost_price: :integer, promotion_discount: :integer, profit_loss: :integer, profit_loss_percent: :integer }
     HEADERS             = { sale_price: :integer, sale_price_avg: :integer}
-    SEARCH_ATTRIBUTES   = { start_date: :orders_created_from, end_date: :orders_created_till, user_manage_contry_ids: :country }
+    SEARCH_ATTRIBUTES   = { start_date: :orders_created_from, end_date: :orders_created_till, user_manage_contry_ids: :country, email_cont: :email }
     SORTABLE_ATTRIBUTES = []
 
     class Result < Spree::Report::TimedResult
@@ -143,6 +143,10 @@ module Spree
         .where(created_at: reporting_period)
       if (search[:user_manage_contry_ids])
         scope = scope.joins(:user).where(spree_users: {country_id: search[:user_manage_contry_ids]})
+      end
+      if search[:email_cont].present?
+        scope = scope.joins(:user)
+          .where(Spree::User.arel_table[:email].matches("%#{ search[:email_cont] }%"))
       end
       scope
     end
